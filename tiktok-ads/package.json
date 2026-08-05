@@ -1,0 +1,15 @@
+{
+  "name": "tiktok-ads-cabinet",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Scripts for the TikTok Ads cabinet template. No runtime dependencies.",
+  "scripts": {
+    "test": "node --test scripts/test/*.test.mjs",
+    "hooks": "node scripts/generate-brief.mjs --stage hooks",
+    "brief": "node scripts/generate-brief.mjs --stage brief",
+    "shots": "node scripts/generate-brief.mjs --stage shots",
+    "dry-run": "node scripts/generate-clip.mjs --dry-run"
+  },
+  "engines": { "node": ">=22" }
+}

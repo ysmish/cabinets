@@ -1,13 +1,20 @@
 # Fixtures
 
-Recorded API response shapes, used to unit-test `generate-clip.mjs` offline.
+Recorded API response shapes. They exist so the Veo code path can be verified
+without a paid key — the live call is gated behind a $10 billing minimum, so
+correctness is proven offline instead. See `docs/testing-notes.md`.
 
-The polling and download logic can be verified without a paid key by replaying
-`veo-operation-done.json` — which matters because the live call is gated behind
-billing. See `docs/testing-notes.md` for what has and has not been run live.
+Run the suite:
 
-| File | What it is |
-|---|---|
-| `veo-operation-pending.json` | Operation response with `done: false` |
-| `veo-operation-done.json` | Completed operation, including the sample video URI |
-| `last-request.json` | Written by `--dry-run`; the exact payload that would be sent |
+```bash
+npm test          # or: node --test scripts/test/*.test.mjs
+```
+
+| File | What it is | Proves |
+|---|---|---|
+| `veo-operation-pending.json` | `done: false` | Poll loop keeps waiting |
+| `veo-operation-done.json` | Completed, with sample video URI | URI extraction from the nested path |
+| `veo-operation-blocked.json` | Done but `generatedSamples: []` | Safety/audio filter handled, not crashed on (not billed) |
+| `gemini-text-response.json` | Real 3.5-flash-lite response with `thoughtSignature` | Text extraction ignores the signature |
+| `gemini-blocked-response.json` | `promptFeedback.blockReason` | Safety block surfaces clearly |
+| `last-request.json` | Written by `--dry-run` | The exact payload that would be sent |

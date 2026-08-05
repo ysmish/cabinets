@@ -1,0 +1,21 @@
+{
+  "estimatedCostUsd": 0.4,
+  "requests": [
+    {
+      "shot": "01",
+      "endpoint": "POST /v1beta/models/veo-3.1-lite-generate-preview:predictLongRunning",
+      "body": {
+        "instances": [
+          {
+            "prompt": "A single matte steel water bottle standing on a bare kitchen counter in cold\nearly morning light. Slow push in, eye level, shallow depth of field. The\nbackground is an out-of-focus domestic kitchen, muted palette of steel and\noff-white. Realistic, unglamorous, documentary style — not a commercial.\nAmbient sound: a quiet room, distant traffic, no music."
+          }
+        ],
+        "parameters": {
+          "aspectRatio": "9:16",
+          "durationSeconds": "8",
+          "resolution": "720p"
+        }
+      }
+    }
+  ]
+}

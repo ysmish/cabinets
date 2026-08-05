@@ -27,10 +27,11 @@ API key. Nothing publishes anywhere — every ad waits for a human.
 
 | Cadence | Job | Owner | Output |
 |---|---|---|---|
-| **Weekly** (Mon 10:00) | [[.jobs/weekly-creative-review]] | Growth Analyst | Learning note in `campaigns/learnings/weekly-<date>.md` |
+| **Wednesday** (10:00) | [[.jobs/weekly-ad-prep]] | Creative Lead | Next campaign written — hooks, brief, shot list, queued rows. Text only, no spend. |
+| **Monday** (10:00) | [[.jobs/weekly-creative-review]] | Growth Analyst | Learning note in `campaigns/learnings/weekly-<date>.md` |
 
-Ad creation itself runs on demand, not on a schedule — video generation costs
-money per call, so it should be something a person asks for.
+Writing is scheduled because it is free. **Generation is on demand**, because every
+clip costs money — a human approves the shot list and runs the generate command.
 
 ## How it works
 
