@@ -1,0 +1,14 @@
+# Secrets — never commit
+.env.local
+.env
+
+# Generated video. Every save auto-commits in a Cabinet KB, so binaries
+# bloat history fast. The .prompt.txt files stay tracked — they are the
+# reviewable record of each generation.
+campaigns/**/*.mp4
+
+# Written by `generate-clip.mjs --dry-run`; regenerate on demand
+fixtures/last-request.json
+
+# Node
+node_modules/
