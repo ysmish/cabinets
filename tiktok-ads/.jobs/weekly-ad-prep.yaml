@@ -1,0 +1,51 @@
+id: weekly-ad-prep
+name: Weekly Ad Prep
+enabled: true
+schedule: 0 10 * * 3
+provider: claude-code
+adapterType: claude_local
+ownerAgent: creative-lead
+agentSlug: creative-lead
+timeout: 1800
+prompt: |-
+  Goal: have the next campaign fully written and ready for a human to approve for
+  generation by Wednesday morning. This job writes text only. It does NOT generate
+  video and does NOT spend money.
+
+  Steps:
+  1. Read `brand/index.md`, `product/index.md`, and `audience/index.md`. If any of
+     the three still contains the shipped placeholder text, stop and append a
+     "## Blocked — [YYYY-MM-DD]" block to `index.md` naming which files need
+     filling in. Do not proceed with invented context.
+  2. Read `testing-queue.csv`. Count rows with status `not-generated` or `draft`.
+     If that count is 3 or more, stop — the queue is full. Append a one-line note
+     to `index.md` saying so.
+  3. Otherwise, pick the highest-ranked untested angle from the "Angles worth
+     testing" list in `audience/index.md`. If the Growth Analyst's most recent
+     note in `campaigns/learnings/` recommends an angle, that one wins.
+  4. Create `campaigns/<NNN-slug>/` — NNN is the next available number, slug is
+     the kebab-cased angle.
+  5. Write `hooks.md` using `generators/hook-generator.md`: five hooks across five
+     DIFFERENT angles, 12 words maximum each, "Chosen" column left blank.
+  6. Write `brief.md` using `generators/script-generator.md` for your recommended
+     hook, clearly marked as a recommendation pending human choice.
+  7. Write `shot-list.md` using `generators/video-prompt-generator.md`. One section
+     per 8-second shot, each with a complete Veo prompt (subject, action, style,
+     camera, composition, ambiance, audio cue) and its parameters.
+  8. Add one row per planned shot to `testing-queue.csv` with status
+     `not-generated` and cost `0.00`.
+  9. Append a "## Ad prep — [YYYY-MM-DD]" block to `index.md` containing: the
+     campaign number and angle, the recommended hook, the number of clips the
+     shot list requires, the estimated generation cost at the model in
+     `VEO_MODEL`, and the exact command a human runs to generate the first clip.
+
+  Rules:
+  - Obey the "Never mention" list in `brand/index.md` literally.
+  - Every product claim must trace to "Proof points". Mark anything unsourced
+    `[TK — confirm]`.
+  - Veo prompts in English. Avoid identifiable people; prefer product-led shots.
+  - Do not call `scripts/generate-clip.mjs`. Generation is a human decision.
+  - Do not modify campaigns whose status is `live` or `concluded`.
+cabinetPath: cabinets/tiktok-ads
+createdAt: '2026-08-05T00:00:00.000Z'
+updatedAt: '2026-08-05T00:00:00.000Z'

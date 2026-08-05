@@ -1,1 +1,4 @@
-campaign,audience,hook,format,kpi,status,next-step
+id,campaign,angle,hook,clip_path,model,cost_usd,status,impressions,ctr,notes
+001,001-example,problem-first,"Your last four bottles are in a landfill",campaigns/001-example/clip-01.mp4,veo-3.1-lite,0.40,draft,,,Placeholder row — replace with your own campaign
+002,001-example,ritual,"The only thing on my desk that never gets replaced",,veo-3.1-lite,0.00,not-generated,,,Awaiting generation
+003,001-example,contrarian,"Reusable is not a personality",,veo-3.1-lite,0.00,not-generated,,,Awaiting generation

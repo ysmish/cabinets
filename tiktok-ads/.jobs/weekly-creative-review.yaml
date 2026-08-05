@@ -1,14 +1,47 @@
 id: weekly-creative-review
 name: Weekly Creative Review
 enabled: true
-schedule: 0 9 * * 1
+schedule: 0 10 * * 1
 provider: claude-code
 adapterType: claude_local
 ownerAgent: growth-analyst
 agentSlug: growth-analyst
-timeout: 900
+timeout: 1800
 prompt: |-
-  Placeholder weekly creative review prompt.
+  Close the weekly learning loop. Decide what the company learned and what the
+  Creative Lead should make next.
+
+  Steps:
+  1. Read `testing-queue.csv` in full, plus every campaign folder modified in the
+     past 7 days.
+  2. Group entries by the `angle` column, not by clip. State how many distinct
+     angles were actually tested this week. If several rows are the same angle in
+     different wording, name them and say which existing entry they duplicate.
+  3. For each angle with results entered: state the numbers WITH their sample
+     size. If the `impressions` column is empty or under 1000, write
+     "unmeasured — sample too small" and do not interpret it. Never estimate.
+  4. Flag fatigue: any angle whose entered results have declined across two or
+     more consecutive weeks. Recommend a refresh before it bottoms out.
+  5. Total the `cost_usd` column for the week and state cost per angle tested.
+     Call out any spend that produced duplicate learning.
+  6. Recommend the next three angles to test, ranked, each with one sentence of
+     reasoning grounded in `brand/index.md` and `audience/index.md` — not generic
+     best practice. Say what result would change your mind about each.
+  7. Update the "Angles worth testing" list in `audience/index.md`: add what you
+     learned, strike what is exhausted.
+  8. Write the note to `campaigns/learnings/weekly-<YYYY-MM-DD>.md`.
+     Structure: the week in one line → what was tested → what the results suggest
+     (or that they are unmeasured) → spend and waste → next three angles.
+     One page maximum.
+  9. Append a two-line summary to `index.md` under "## Learning — [YYYY-MM-DD]".
+
+  Rules:
+  - This cabinet has NO TikTok Ads API connection. Performance figures come from a
+    human typing them into `testing-queue.csv`. If they are not there, the honest
+    answer is that the week is unmeasured — write that.
+  - Never report a metric without its sample size.
+  - Do not write ads, hooks, or shot lists. Recommend angles; the Creative Lead
+    writes them.
 cabinetPath: cabinets/tiktok-ads
 createdAt: '2026-08-05T00:00:00.000Z'
 updatedAt: '2026-08-05T00:00:00.000Z'

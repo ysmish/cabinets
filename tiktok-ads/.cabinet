@@ -3,5 +3,13 @@ id: tiktok-ads-root
 name: TikTok Ads
 kind: root
 version: 0.1.0
-description: TikTok ad creative and performance operating system.
+description: >
+  Turn the files you already have about your company into TikTok ads. Fill in
+  three placeholders (brand voice, product, audience) and a creative-lead agent
+  writes hooks, briefs, and shot lists, then generates 9:16 video with native
+  audio through the Google Gemini API using your own key. A growth-analyst agent
+  owns the creative testing queue and the weekly learning loop. Text stages run
+  on the Gemini free tier; video generation is paid and gated behind human
+  approval. Nothing publishes anywhere.
 entry: index.md
+domain: Media
