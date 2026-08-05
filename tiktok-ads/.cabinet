@@ -1,0 +1,7 @@
+schemaVersion: 1
+id: tiktok-ads-root
+name: TikTok Ads
+kind: root
+version: 0.1.0
+description: TikTok ad creative and performance operating system.
+entry: index.md

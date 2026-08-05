@@ -1,0 +1,14 @@
+id: weekly-creative-review
+name: Weekly Creative Review
+enabled: true
+schedule: 0 9 * * 1
+provider: claude-code
+adapterType: claude_local
+ownerAgent: growth-analyst
+agentSlug: growth-analyst
+timeout: 900
+prompt: |-
+  Placeholder weekly creative review prompt.
+cabinetPath: cabinets/tiktok-ads
+createdAt: '2026-08-05T00:00:00.000Z'
+updatedAt: '2026-08-05T00:00:00.000Z'
