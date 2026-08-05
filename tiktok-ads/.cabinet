@@ -3,7 +3,7 @@ id: tiktok-ads-root
 name: TikTok Ads
 kind: root
 version: 0.1.0
-description: >
+description: >-
   Turn the files you already have about your company into TikTok ads. Fill in
   three placeholders (brand voice, product, audience) and a creative-lead agent
   writes hooks, briefs, and shot lists, then generates 9:16 video with native
