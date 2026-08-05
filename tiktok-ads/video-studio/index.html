@@ -1,16 +1,201 @@
-<!-- STATUS: skeleton. Implemented in Phase G. -->
-<!-- The .app file next to this one marks the folder as an embedded app; Cabinet
-     renders this index.html in an iframe. -->
 <!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Video Studio</title>
 <style>
-  body { font: 15px/1.5 system-ui, sans-serif; padding: 2rem; color: #222; }
-  .todo { border-left: 3px solid #ccc; padding-left: 1rem; color: #666; }
+  :root {
+    --ink:      #14161B;
+    --slate:    #232833;
+    --rule:     #333A47;
+    --paper:    #F4F3F0;
+    --muted:    #8B93A1;
+    --signal:   #D4881F;   /* spend — the thing that costs money */
+    --live:     #3E9B8F;   /* in market */
+    --pending:  #5A6272;   /* not generated */
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 28px 24px 48px;
+    background: var(--ink); color: var(--paper);
+    font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .num { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
+
+  /* ── ledger header ─────────────────────────────────────── */
+  header { border-bottom: 1px solid var(--rule); padding-bottom: 20px; margin-bottom: 28px; }
+  h1 {
+    margin: 0 0 18px; font-size: 26px; font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+  h1 small { display: block; font-size: 12px; font-weight: 400; letter-spacing: 0.08em;
+             text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .ledger { display: flex; flex-wrap: wrap; gap: 28px; align-items: baseline; }
+  .stat .v { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
+  .stat .k { font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+  .stat.spend .v { color: var(--signal); }
+
+  /* ── the 9:16 bench ────────────────────────────────────── */
+  .bench { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+  .ad { background: var(--slate); border: 1px solid var(--rule); border-radius: 3px; overflow: hidden;
+        display: flex; flex-direction: column; }
+  .frame { position: relative; aspect-ratio: 9 / 16; background: #0D0F13; display: grid; place-items: center; }
+  .frame video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .frame .empty { text-align: center; color: var(--pending); padding: 0 16px; }
+  .frame .empty b { display: block; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .frame .empty span { font-size: 12px; }
+  .tag { position: absolute; top: 8px; left: 8px; font-size: 10px; letter-spacing: 0.08em;
+         text-transform: uppercase; padding: 3px 7px; border-radius: 2px; background: rgba(0,0,0,.65);
+         border: 1px solid var(--rule); }
+  .tag.live     { color: var(--live);    border-color: var(--live); }
+  .tag.draft    { color: var(--signal);  border-color: var(--signal); }
+  .tag.queued   { color: var(--paper); }
+  .tag.pending  { color: var(--pending); }
+  .meta { padding: 12px 13px 14px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .hook { font-size: 13.5px; line-height: 1.35; font-weight: 500; }
+  .angle { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .foot { margin-top: auto; display: flex; justify-content: space-between; align-items: baseline;
+          font-size: 11.5px; color: var(--muted); border-top: 1px solid var(--rule); padding-top: 9px; }
+  .foot .cost { color: var(--signal); }
+  .foot .cost.free { color: var(--pending); }
+  a.brief { color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--rule); }
+  a.brief:hover, a.brief:focus { color: var(--paper); border-color: var(--paper); }
+  :focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+
+  .note { margin-top: 30px; padding-top: 18px; border-top: 1px solid var(--rule);
+          color: var(--muted); font-size: 12.5px; max-width: 62ch; }
+  code { font-family: ui-monospace, Menlo, monospace; color: var(--paper); font-size: 12px; }
+  @media (prefers-reduced-motion: no-preference) { .ad { transition: border-color .15s ease; } }
+  .ad:hover { border-color: var(--muted); }
 </style>
-<h1>Video Studio</h1>
-<p class="todo">
-  Phase G. Gallery of generated ads: 9:16 video player, the hook it came from,
-  a link to the source brief, model and cost, and status from
-  <code>testing-queue.csv</code>.
-</p>
+</head>
+<body>
+
+<header>
+  <h1><small>TikTok Ads</small>Review bench</h1>
+  <div class="ledger" id="ledger"></div>
+</header>
+
+<main class="bench" id="bench"></main>
+
+<p class="note" id="note"></p>
+
+<script>
+const STATUS = {
+  'not-generated': { label: 'not generated', cls: 'pending' },
+  'draft':         { label: 'draft',         cls: 'draft'   },
+  'queued':        { label: 'queued',        cls: 'queued'  },
+  'live':          { label: 'live',          cls: 'live'    },
+  'concluded':     { label: 'concluded',     cls: 'queued'  },
+};
+
+/** Minimal CSV parser — handles quoted fields containing commas. */
+function parseCSV(text) {
+  const rows = [];
+  let row = [], field = '', quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (quoted) {
+      if (c === '"' && text[i + 1] === '"') { field += '"'; i++; }
+      else if (c === '"') quoted = false;
+      else field += c;
+    } else if (c === '"') quoted = true;
+    else if (c === ',') { row.push(field); field = ''; }
+    else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+    else if (c !== '\r') field += c;
+  }
+  if (field || row.length) { row.push(field); rows.push(row); }
+  const head = rows.shift().map(h => h.trim());
+  return rows.filter(r => r.length > 1).map(r =>
+    Object.fromEntries(head.map((h, i) => [h, (r[i] ?? '').trim()])));
+}
+
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+}
+
+function card(ad) {
+  const st = STATUS[ad.status] || { label: ad.status || 'unknown', cls: 'pending' };
+  const wrap = el('article', 'ad');
+
+  const frame = el('div', 'frame');
+  if (ad.clip_path) {
+    const v = el('video');
+    v.src = '../' + ad.clip_path;
+    v.controls = true; v.playsInline = true; v.preload = 'metadata';
+    v.addEventListener('error', () => {
+      frame.replaceChildren(tag(st), missing('Clip not on disk', 'Run generate-clip.mjs'));
+    });
+    frame.append(v);
+  } else {
+    frame.append(missing('No clip yet', 'Approve the shot list to generate'));
+  }
+  frame.append(tag(st));
+
+  const meta = el('div', 'meta');
+  meta.append(el('div', 'angle', ad.angle || '—'));
+  meta.append(el('div', 'hook', ad.hook || 'Untitled'));
+
+  const foot = el('div', 'foot');
+  const brief = el('a', 'brief', ad.campaign || 'brief');
+  brief.href = '../campaigns/' + ad.campaign + '/brief.md';
+  const cost = Number(ad.cost_usd || 0);
+  const c = el('span', 'cost num' + (cost ? '' : ' free'), cost ? '$' + cost.toFixed(2) : '—');
+  foot.append(brief, c);
+  meta.append(foot);
+
+  wrap.append(frame, meta);
+  return wrap;
+
+  function tag(s) { return el('span', 'tag ' + s.cls, s.label); }
+  function missing(a, b) {
+    const d = el('div', 'empty');
+    d.append(el('b', null, a), el('span', null, b));
+    return d;
+  }
+}
+
+function ledger(ads) {
+  const spend = ads.reduce((s, a) => s + Number(a.cost_usd || 0), 0);
+  const angles = new Set(ads.map(a => a.angle).filter(Boolean)).size;
+  const made = ads.filter(a => a.clip_path).length;
+  const stats = [
+    ['ads', ads.length, ''],
+    ['generated', made, ''],
+    ['angles tested', angles, ''],
+    ['spent', '$' + spend.toFixed(2), 'spend'],
+  ];
+  const box = document.getElementById('ledger');
+  box.replaceChildren(...stats.map(([k, v, cls]) => {
+    const s = el('div', 'stat ' + cls);
+    s.append(el('div', 'v num', String(v)), el('div', 'k', k));
+    return s;
+  }));
+}
+
+(async function () {
+  const bench = document.getElementById('bench');
+  const note = document.getElementById('note');
+  try {
+    const res = await fetch('../testing-queue.csv');
+    if (!res.ok) throw new Error(res.status);
+    const ads = parseCSV(await res.text());
+    if (!ads.length) {
+      note.textContent = 'The queue is empty. Run the Wednesday ad prep job, or write a campaign by hand.';
+      return;
+    }
+    ledger(ads);
+    bench.replaceChildren(...ads.map(card));
+    note.innerHTML = 'Reads <code>testing-queue.csv</code>. Enter results there — this bench shows what exists and what it cost, not how it performed.';
+  } catch (e) {
+    note.innerHTML = 'Could not read <code>../testing-queue.csv</code>. Open this page through Cabinet rather than from the file system, so relative paths resolve.';
+  }
+})();
+</script>
+</body>
+</html>

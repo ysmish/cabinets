@@ -30,9 +30,6 @@ Hard rules:
   - Each hook must fail the swap test: if it still works with a competitor's
     product substituted, it is too generic. Rewrite it.
 
-  - Each hook may reference at most one proof point. Across the five, use at
-    least three different proof points.
-
 Output a markdown table with columns: #, Angle, Hook, Chosen (leave blank).
 Then one sentence recommending which to test first and why.
 Write the result to campaigns/{campaign}/hooks.md. Output nothing else.

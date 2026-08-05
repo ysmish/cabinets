@@ -8,6 +8,7 @@ testing queue. Bring your own Google Gemini API key.
 npx cabinetai import tiktok-ads
 cd tiktok-ads
 cp .env.example .env.local     # add your Gemini key
+npm test                       # 19 offline tests, no key needed
 ```
 
 ## What it does
@@ -15,24 +16,39 @@ cp .env.example .env.local     # add your Gemini key
 ```
 brand/  product/  audience/          your company context (you fill these in)
         │
-        ▼  Creative Lead + Gemini
-   hooks.md          5 angles, 12 words each        free
+        ▼  Creative Lead + Gemini            scripts/generate-brief.mjs
+   hooks.md          5 angles, 12 words each              FREE
         │  ← human picks one
         ▼
-   brief.md          one idea, 8-second beats       free
+   brief.md          one idea, 8-second beats             FREE
         │
         ▼
-   shot-list.md      one Veo prompt per shot        free
+   shot-list.md      one Veo prompt per shot              FREE
         │  ← human approves
-        ▼  scripts/generate-clip.mjs
-   clip-01.mp4       9:16, 8s, native audio         PAID
+        ▼  Veo 3.1                            scripts/generate-clip.mjs
+   clip-01.mp4       9:16, 8s, native audio               PAID
         │
         ▼
-   testing-queue.csv → weekly learning note
+   testing-queue.csv → video-studio → weekly learning note
 ```
 
-Two agents: **Creative Lead** writes, **Growth Analyst** decides what gets tested
-and what was learned. One weekly job. Nothing publishes anywhere.
+Two agents. One writes, one decides what gets tested. Nothing publishes anywhere.
+
+- **[Creative Lead](.agents/creative-lead/persona.md)** — reads the company
+  files, writes hooks and briefs, engineers Veo prompts, runs generation.
+- **[Growth Analyst](.agents/growth-analyst/persona.md)** — owns the testing
+  queue, keeps angles distinct, writes the weekly learning note.
+
+## Recurring rhythm
+
+| Cadence | Job | Owner | Output |
+|---|---|---|---|
+| **Wed 10:00** | `weekly-ad-prep` | Creative Lead | Next campaign written — hooks, brief, shot list, queued rows. Text only, no spend. |
+| **Mon 10:00** | `weekly-creative-review` | Growth Analyst | Learning note in `campaigns/learnings/weekly-<date>.md` |
+
+Writing is scheduled because it is free. **Generation is on demand**, because
+every clip costs money — a human approves the shot list and runs the command.
+Monday's note names the angle Wednesday's job writes.
 
 ## Costs and prerequisites
 
@@ -56,25 +72,45 @@ Per 8-second clip, 720p, audio included:
 
 **The template defaults to Lite deliberately.** Draft cheap, escalate to Fast
 only once a direction is approved. `VEO_MAX_CLIPS_PER_RUN` caps a single run so a
-scheduled job cannot drain a balance overnight.
+scheduled job cannot drain a balance overnight, and `generate-clip.mjs` prints the
+cost and asks for confirmation before spending.
 
-Also note: on the free tier, prompts and responses may be used to improve Google's
-products. Do not run proprietary company documents through a free-tier key.
+On the free tier, prompts and responses may be used to improve Google's products.
+Do not run proprietary company documents through a free-tier key.
+
+## Usage
+
+```bash
+# text stages — free
+node scripts/generate-brief.mjs --stage hooks --campaign 002-ritual
+# pick a hook by hand in hooks.md, then:
+node scripts/generate-brief.mjs --stage brief --campaign 002-ritual
+node scripts/generate-brief.mjs --stage shots --campaign 002-ritual
+
+# see exactly what would be sent and what it would cost — free
+node scripts/generate-clip.mjs --campaign 002-ritual --shot 01 --dry-run
+
+# generate — paid
+node scripts/generate-clip.mjs --campaign 002-ritual --shot 01
+```
+
+Every script takes `--dry-run`. `generate-brief.mjs` warns when the company
+context files still contain placeholder text.
 
 ## Design decisions
 
 **Why a script and not a prompt generator.** Every other generator in this
-registry — `podcast-factory`, `youtube-channel-factory`, `book-factory` — produces
-a prompt for a human to paste into an external tool. No template calls an external
-API with a key. Three options were considered:
+registry — `podcast-factory`, `youtube-channel-factory`, `book-factory` —
+produces a prompt for a human to paste into an external tool. No template calls
+an external API with a key. Three options were considered:
 
 | Option | Verdict |
 |---|---|
 | Prompt-generator only, human pastes into Flow | Matches precedent, zero cost, but the cabinet never actually produces an ad |
 | **Script the agent invokes** ✅ | Agents can generate unattended; key stays in `.env.local`; cost ceiling enforceable in code |
-| Browser app calling Gemini with a key in `localStorage` | Precedent exists in this registry for `fetch` + `localStorage`, but a key in browser storage is a poor security story for a template shipped to companies |
+| Browser app calling Gemini with a key in `localStorage` | Precedent exists here for `fetch` + `localStorage`, but a key in browser storage is a poor security story for a template shipped to companies |
 
-Chosen: the script, with the browser app kept as a read-only gallery.
+Chosen: the script, with `video-studio/` kept as a read-only gallery.
 
 **Why no auto-publishing.** Cabinet's model is that anything touching the outside
 world waits for human approval. Generating and staging an ad is the right scope;
@@ -82,9 +118,15 @@ posting to TikTok is not — and TikTok Ads API access is a separate approval
 process measured in weeks. Two human gates are built in: choosing the hook, and
 approving the shot list before generation bills.
 
-**Why model IDs are configurable.** Google retires them on a rolling basis. During
-development `gemini-2.5-flash` became unavailable to new users and Veo 3 / Veo 2
-were shut down. Both `GEMINI_TEXT_MODEL` and `VEO_MODEL` live in `.env.example`.
+**Why model IDs are configurable.** Google retires them on a rolling basis.
+During development `gemini-2.5-flash` became unavailable to new users and Veo 3 /
+Veo 2 were shut down. Both `GEMINI_TEXT_MODEL` and `VEO_MODEL` live in
+`.env.example`.
+
+**Why videos are gitignored but prompts are not.** Every save auto-commits in a
+Cabinet KB, so MP4s bloat history quickly. `clip-NN.prompt.txt` stays tracked —
+generation is non-deterministic, and an output without its prompt cannot be
+reviewed or re-run.
 
 **Relationship to `ad-performance`.** That cabinet measures paid media — spend,
 CAC, ROAS, memos. This one creates the creative that gets measured. They are
@@ -95,37 +137,44 @@ complementary; neither duplicates the other.
 | Constraint | Consequence |
 |---|---|
 | 8 seconds max per generation | A 24-second ad is three clips. v1 ships single-clip ads |
-| 9:16 supported | `aspectRatio: "9:16"` — native, no cropping needed |
+| 9:16 supported natively | `aspectRatio: "9:16"` — no cropping needed |
 | Audio generated natively | No separate TTS step. Always include an audio cue in the prompt |
 | Videos deleted after 2 days | The script downloads bytes immediately; never persists a URI |
 | SynthID watermark | Every Veo output is watermarked as AI-generated |
 | English only evaluated | Other languages may work but are not evaluated. Prompts are English |
 | Regional person-generation limits | Restrictions apply in EU/UK/CH/MENA. The template steers toward product-led shots |
-| Latency 11s–6min | Job timeout set to 1800, not the registry default of 600 |
+| Latency 11s–6min | Job timeout is 1800, not the registry default of 600 |
 | One video per request | Five variants means five calls |
 
 ## Testing status
 
-The text pipeline is verified live against `gemini-3.5-flash-lite`. The Veo path
-is implemented against the documented API and validated with `--dry-run` plus
-fixture-based tests, but has **not** been executed live — it is gated behind the
-$10 billing minimum described above. Full record in
+The text pipeline is **verified live** against `gemini-3.5-flash-lite` — hooks
+generated from a real brand file, with constraint compliance checked and two
+prompt-level defects documented. The Veo path is implemented against the
+documented API and validated by 19 offline tests plus `--dry-run`, but has **not**
+been executed live: it is gated behind the $10 billing minimum above.
+
+Full record, including the raw responses and the defects found:
 [`docs/testing-notes.md`](docs/testing-notes.md).
 
 ## Layout
 
 ```
 .cabinet                    manifest
-.agents/creative-lead/      hooks, briefs, shot lists
+.agents/creative-lead/      hooks, briefs, shot lists, generation
 .agents/growth-analyst/     testing queue, weekly learning
-.jobs/                      weekly-creative-review
+.jobs/                      weekly-ad-prep · weekly-creative-review
 brand/ product/ audience/   your company context
 campaigns/                  one folder per campaign + clips + prompts
 generators/                 the prompt for each pipeline stage
 scripts/                    generate-brief.mjs (free) · generate-clip.mjs (paid)
-video-studio/               embedded gallery app
-fixtures/                   recorded API shapes for offline tests
+scripts/lib/                env, gemini, veo — the testable core
+scripts/test/               19 offline tests
+fixtures/                   recorded API shapes
+video-studio/               embedded review gallery
 testing-queue.csv           the creative test queue
 ```
+
+No runtime dependencies — Node 22+ built-ins only.
 
 MIT.

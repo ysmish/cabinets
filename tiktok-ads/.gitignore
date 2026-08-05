@@ -2,9 +2,8 @@
 .env.local
 .env
 
-# Generated video. Every save auto-commits in a Cabinet KB, so binaries
-# bloat history fast. The .prompt.txt files stay tracked — they are the
-# reviewable record of each generation.
+# Generated video. Large binaries in a git-backed KB bloat history fast.
+# Keep the .prompt.txt files: they are the reviewable record of each generation.
 campaigns/**/*.mp4
 
 # Written by `generate-clip.mjs --dry-run`; regenerate on demand
