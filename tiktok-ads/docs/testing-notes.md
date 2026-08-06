@@ -102,8 +102,29 @@ Both fixes belong in `generators/hook-generator.md`, not in the model choice.
 | Veo video generation | Paid tier only — see below |
 
 ```
+```
 $ node scripts/generate-clip.mjs --campaign 001-example --shot 01 --yes
-<!-- TODO: paste the actual error response here -->
+Campaign : 001-example
+Shots    : 01
+Model    : veo-3.1-lite-generate-preview  720p  8s  9:16
+Cost     : $0.40 per clip → $0.40 total
+── Shot 01 ──
+Error: You exceeded your current quota, please check your plan and billing details.
+  → Veo is PAID TIER ONLY. There is no free tier for video generation, and
+    Google Cloud free-trial credits are excluded from Gemini API usage.
+    A $10 minimum prepay top-up unlocks it.
+```
+
+**Two live calls, two different failures — this is the useful part.**
+
+| Attempt | Response | Meaning |
+|---|---|---|
+| First | `400 — The value type for durationSeconds needs to be a number` | Request was malformed. A real bug the offline suite missed. |
+| After fix | `429 — You exceeded your current quota` | Request is valid. Rejected on billing alone. |
+
+The progression from a validation error to a quota error is the evidence that
+the request shape is now correct: the API parsed it and got as far as checking
+entitlement. Everything upstream of billing works.
 ```
 
 **Reason.** Veo is available to developers on the paid tier of the Gemini API
