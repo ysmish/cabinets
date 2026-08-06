@@ -43,7 +43,9 @@ export function buildVeoRequest({ prompt, aspectRatio, durationSeconds, resoluti
     instances: [{ prompt }],
     parameters: {
       aspectRatio,
-      durationSeconds: String(durationSeconds),
+      // Must be a NUMBER. The API rejects a string with:
+      //   "The value type for `durationSeconds` needs to be a number."
+      durationSeconds: Number(durationSeconds),
       resolution,
     },
   };

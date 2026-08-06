@@ -50,9 +50,18 @@ test('request body matches the documented Veo shape', () => {
   });
   assert.deepEqual(body, {
     instances: [{ prompt: 'A steel bottle on a counter' }],
-    parameters: { aspectRatio: '9:16', durationSeconds: '8', resolution: '720p' },
+    parameters: { aspectRatio: '9:16', durationSeconds: 8, resolution: '720p' },
   });
-  assert.equal(typeof body.parameters.durationSeconds, 'string', 'API expects a string');
+  // Regression: the API returns 400 "needs to be a number" if this is a string.
+  // Caught by a live call on 2026-08-06 — the original test asserted the wrong type.
+  assert.equal(typeof body.parameters.durationSeconds, 'number', 'API rejects strings');
+});
+
+test('durationSeconds stays numeric even when config supplies a string', () => {
+  // .env values are always strings — the builder must coerce.
+  const body = buildVeoRequest({ prompt: 'x', aspectRatio: '9:16', durationSeconds: '8', resolution: '720p' });
+  assert.equal(body.parameters.durationSeconds, 8);
+  assert.equal(typeof body.parameters.durationSeconds, 'number');
 });
 
 test('cost matches the published price table', () => {
