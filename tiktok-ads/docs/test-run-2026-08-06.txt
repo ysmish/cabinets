@@ -1,0 +1,93 @@
+TikTok Ads cabinet — test run
+date : 2026-08-06T10:31:20Z
+node : v23.11.0
+======================================================================
+
+### TEST 1 — offline suite (no key, no network)
+
+### TEST 4 — dry run (no spend)
+Campaign : 001-example
+Shots    : 01
+Model    : veo-3.1-lite-generate-preview  720p  8s  9:16
+Cost     : $0.40 per clip → $0.40 total
+
+[
+  {
+    "shot": "01",
+    "endpoint": "POST /v1beta/models/veo-3.1-lite-generate-preview:predictLongRunning",
+    "body": {
+      "instances": [
+        {
+          "prompt": "A single matte steel water bottle standing on a bare kitchen counter in cold\nearly morning light. Slow push in, eye level, shallow depth of field. The\nbackground is an out-of-focus domestic kitchen, muted palette of steel and\noff-white. Realistic, unglamorous, documentary style — not a commercial.\nAmbient sound: a quiet room, distant traffic, no music."
+        }
+      ],
+      "parameters": {
+        "aspectRatio": "9:16",
+        "durationSeconds": "8",
+        "resolution": "720p"
+      }
+    }
+  }
+]
+
+✓ Dry run. Nothing sent, nothing billed. Written to campaigns/001-example/last-request.json
+
+### TEST 5 — guard rails
+
+-- 5a  no API key
+Error: GEMINI_API_KEY is not set.
+  cp .env.example .env.local  and add your key from https://aistudio.google.com/apikey
+
+-- 5b  missing prerequisite stage
+Missing prerequisite: campaigns/999-nonexistent/brief.md
+
+-- 5c  placeholder company files warning
+⚠️  Still placeholder content: brand/index.md, product/index.md, audience/index.md
+   Output will be generic. Fill these in for grounded ads.
+
+-- 5d  invalid parameters rejected before any network call
+Invalid Veo parameters:
+  - Veo 3.1 Lite does not support 4k
+
+-- 5e  missing shot fails loudly
+Error: Shot 07 not found in shot-list.md
+
+### TEST 6 — registry manifest
+Wrote manifest.json — 106 cabinets.
+{
+  "slug": "tiktok-ads",
+  "name": "TikTok Ads",
+  "description": "Turn the files you already have about your company into TikTok ads. Fill in three placeholders (brand voice, product, audience) and a creative-lead agent writes hooks, briefs, and shot lists, then generates 9:16 video with native audio through the Google Gemini API using your own key. A growth-analyst agent owns the creative testing queue and the weekly learning loop. Text stages run on the Gemini free tier; video generation is paid and gated behind human approval. Nothing publishes anywhere.",
+  "version": "0.1.0",
+  "domain": "Media",
+  "cover": "cover.jpg",
+  "agentCount": 2,
+  "jobCount": 2,
+  "childCount": 0,
+  "tags": [
+    "marketing",
+    "video",
+    "tiktok",
+    "ads",
+    "gemini",
+    "veo",
+    "cabinet"
+  ]
+}
+
+### TEST 7 — Veo live call (expected to fail: paid tier)
+── Shot 01 ──
+A single matte steel water bottle standing on a bare kitchen counter in cold early morning light. Slow push in, eye leve…
+file:///Users/peternovikov/Documents/cabinets/tiktok-ads/scripts/lib/veo.mjs:97
+  if (!res.ok) throw new Error(explainVeoError(res.status, data));
+                     ^
+
+Error: Veo API 400: The value type for `durationSeconds` needs to be a number. Please adjust your request accordingly.
+    at startGeneration (file:///Users/peternovikov/Documents/cabinets/tiktok-ads/scripts/lib/veo.mjs:97:22)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///Users/peternovikov/Documents/cabinets/tiktok-ads/scripts/generate-clip.mjs:101:16
+
+Node.js v23.11.0
+
+======================================================================
+Written to docs/test-run-2026-08-06.txt
