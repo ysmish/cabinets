@@ -25,9 +25,9 @@ constraints, video-URI extraction from the nested operation, the poll loop
 stopping exactly when `done` flips, timeout behaviour, the done-but-empty
 safety-filter case, and shot-prompt parsing out of `shot-list.md`.
 
-Fixtures in `fixtures/` are recorded response shapes taken from the documented
-API, including a real `gemini-3.5-flash-lite` response carrying a
-`thoughtSignature`.
+The response shapes are declared at the top of each test file, transcribed from
+the documented API — plus one captured verbatim from a live
+`gemini-3.5-flash-lite` call, including its `thoughtSignature`.
 
 ## Verified live ✅
 
@@ -122,7 +122,7 @@ which buys roughly 25 clips at the Lite tier this template defaults to.
 ### How the video path was validated instead
 
 1. **Dry run.** `--dry-run` assembles and prints the exact request without
-   sending it, and writes it to `fixtures/last-request.json`:
+   sending it, and writes it to `campaigns/<campaign>/last-request.json`:
 
 ```
 $ node scripts/generate-clip.mjs --campaign 001-example --shot 01 --dry-run
@@ -138,8 +138,9 @@ Cost     : $0.40 per clip → $0.40 total
 ✓ Dry run. Nothing sent, nothing billed.
 ```
 
-2. **Fixture tests.** Polling, URI extraction, and error handling verified
-   against recorded operation responses. See `npm test`.
+2. **Offline tests.** Polling, URI extraction, and error handling verified
+   against recorded operation shapes declared in `scripts/test/veo.test.mjs`.
+   See `npm test`.
 3. **Doc conformance.** Request shape, parameter names, and value types checked
    against https://ai.google.dev/gemini-api/docs/veo.
 

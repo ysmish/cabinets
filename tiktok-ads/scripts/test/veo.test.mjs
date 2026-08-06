@@ -8,7 +8,40 @@ import {
 } from '../lib/veo.mjs';
 
 const root = path.resolve(import.meta.dirname, '../..');
-const fx = n => JSON.parse(fs.readFileSync(path.join(root, 'fixtures', n), 'utf8'));
+
+/**
+ * Recorded Veo response shapes, transcribed from the operation format documented
+ * at https://ai.google.dev/gemini-api/docs/veo. The live call is paid-tier only,
+ * so these stand in for it — see docs/testing-notes.md.
+ */
+
+/** Generation started, not finished. Latency is 11s–6min. */
+const OPERATION_PENDING = {
+  name: 'models/veo-3.1-lite-generate-preview/operations/abc123def456',
+  metadata: { '@type': 'type.googleapis.com/google.ai.generativelanguage.v1beta.GenerateVideoMetadata' },
+  done: false,
+};
+
+/** Finished. Note how deep the URI sits — a wrong path here fails after billing. */
+const OPERATION_DONE = {
+  name: 'models/veo-3.1-lite-generate-preview/operations/abc123def456',
+  done: true,
+  response: {
+    '@type': 'type.googleapis.com/google.ai.generativelanguage.v1beta.PredictLongRunningResponse',
+    generateVideoResponse: {
+      generatedSamples: [
+        { video: { uri: 'https://generativelanguage.googleapis.com/v1beta/files/xyz789:download?alt=media' } },
+      ],
+    },
+  },
+};
+
+/** Done but empty — a safety or audio filter dropped the video. Not billed. */
+const OPERATION_BLOCKED = {
+  name: 'models/veo-3.1-lite-generate-preview/operations/blocked999',
+  done: true,
+  response: { generateVideoResponse: { generatedSamples: [] } },
+};
 
 test('request body matches the documented Veo shape', () => {
   const body = buildVeoRequest({
@@ -43,23 +76,23 @@ test('parameter validation catches the documented constraints', () => {
 });
 
 test('pending operation is not done', () => {
-  assert.equal(isOperationDone(fx('veo-operation-pending.json')), false);
-  assert.throws(() => extractVideoUri(fx('veo-operation-pending.json')), /not done/);
+  assert.equal(isOperationDone(OPERATION_PENDING), false);
+  assert.throws(() => extractVideoUri(OPERATION_PENDING), /not done/);
 });
 
 test('completed operation yields the video URI', () => {
-  const op = fx('veo-operation-done.json');
+  const op = OPERATION_DONE;
   assert.equal(isOperationDone(op), true);
   assert.equal(extractVideoUri(op),
     'https://generativelanguage.googleapis.com/v1beta/files/xyz789:download?alt=media');
 });
 
 test('done-but-empty operation is reported as filtered, not crashed on', () => {
-  assert.throws(() => extractVideoUri(fx('veo-operation-blocked.json')), /safety or audio filter/);
+  assert.throws(() => extractVideoUri(OPERATION_BLOCKED), /safety or audio filter/);
 });
 
 test('poll loop stops as soon as done becomes true', async () => {
-  const seq = [fx('veo-operation-pending.json'), fx('veo-operation-pending.json'), fx('veo-operation-done.json')];
+  const seq = [OPERATION_PENDING, OPERATION_PENDING, OPERATION_DONE];
   let calls = 0, slept = 0;
   const op = await pollOperation({
     apiKey: 'test', name: 'models/x/operations/y',
@@ -74,7 +107,7 @@ test('poll loop stops as soon as done becomes true', async () => {
 test('poll loop times out rather than hanging forever', async () => {
   await assert.rejects(pollOperation({
     apiKey: 'test', name: 'models/x/operations/y',
-    fetchImpl: async () => ({ ok: true, json: async () => fx('veo-operation-pending.json') }),
+    fetchImpl: async () => ({ ok: true, json: async () => OPERATION_PENDING }),
     intervalMs: 1, maxWaitMs: 5, sleep: async () => {},
   }), /Timed out/);
 });

@@ -6,7 +6,7 @@
  *   node scripts/generate-clip.mjs --campaign 001-example --shot 01
  *   node scripts/generate-clip.mjs --campaign 001-example --all --yes
  *
- * --dry-run  build and print the exact request, write it to fixtures/last-request.json,
+ * --dry-run  build and print the exact request, write it to the campaign folder,
  *            and exit. Costs nothing. Run this first, always.
  * --yes      skip the cost confirmation prompt (for scripted runs)
  * --all      every shot in the shot list, up to VEO_MAX_CLIPS_PER_RUN
@@ -75,11 +75,11 @@ if (args['dry-run']) {
     endpoint: `POST /v1beta/models/${cfg.model}:predictLongRunning`,
     body: buildVeoRequest({ ...cfg, prompt: parseShotPrompt(shotList, shot) }),
   }));
-  const out = path.join(root, 'fixtures', 'last-request.json');
+  const out = path.join(campaignDir, 'last-request.json');
   fs.mkdirSync(path.dirname(out), { recursive: true });
   fs.writeFileSync(out, JSON.stringify({ estimatedCostUsd: total, requests: preview }, null, 2) + '\n');
   console.log(JSON.stringify(preview, null, 2));
-  console.log(`\n✓ Dry run. Nothing sent, nothing billed. Written to fixtures/last-request.json`);
+  console.log(`\n✓ Dry run. Nothing sent, nothing billed. Written to campaigns/${campaign}/last-request.json`);
   process.exit(0);
 }
 

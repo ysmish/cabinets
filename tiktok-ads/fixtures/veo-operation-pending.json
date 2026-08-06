@@ -1,7 +1,0 @@
-{
-  "name": "models/veo-3.1-lite-generate-preview/operations/abc123def456",
-  "metadata": {
-    "@type": "type.googleapis.com/google.ai.generativelanguage.v1beta.GenerateVideoMetadata"
-  },
-  "done": false
-}

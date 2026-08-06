@@ -169,8 +169,7 @@ campaigns/                  one folder per campaign + clips + prompts
 generators/                 the prompt for each pipeline stage
 scripts/                    generate-brief.mjs (free) · generate-clip.mjs (paid)
 scripts/lib/                env, gemini, veo — the testable core
-scripts/test/               19 offline tests
-fixtures/                   recorded API shapes
+scripts/test/               19 offline tests (response shapes inlined)
 video-studio/               embedded review gallery
 testing-queue.csv           the creative test queue
 ```
