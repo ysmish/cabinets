@@ -1,8 +1,19 @@
 # TikTok Ads
 
+Test Videos:
+
+
+https://github.com/user-attachments/assets/5445e7b2-261b-4d26-bc07-276e3af61115
+
+
+https://github.com/user-attachments/assets/87e757df-e156-44f1-8dc0-2069a4b5c4e2
+
+
+
 A Cabinet template that turns the files you already have about your company into
 TikTok ads — hooks, briefs, shot lists, generated 9:16 video, and a creative
 testing queue. Bring your own Google Gemini API key.
+
 
 ```bash
 npx cabinetai import tiktok-ads
