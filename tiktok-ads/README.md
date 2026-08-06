@@ -1,25 +1,32 @@
 # TikTok Ads
-```bash
-npx cabinetai import tiktok-ads
-cd tiktok-ads
-cp .env.example .env.local     # add your Gemini key
-npm test                       # 20 offline tests, no key needed
-```
-
-Test Videos:
-
-https://github.com/user-attachments/assets/5a372a02-955b-4516-b2a6-9b1de991eb13
-
-
-https://github.com/user-attachments/assets/87e757df-e156-44f1-8dc0-2069a4b5c4e2
-
-
 
 A Cabinet template that turns the files you already have about your company into
 TikTok ads — hooks, briefs, shot lists, generated 9:16 video, and a creative
 testing queue. Bring your own Google Gemini API key.
 
+## Demo
 
+https://github.com/user-attachments/assets/5a372a02-955b-4516-b2a6-9b1de991eb13
+
+https://github.com/user-attachments/assets/87e757df-e156-44f1-8dc0-2069a4b5c4e2
+
+The template was installed by copying it into the running instance's data
+directory (`~/.cabinet/app/v0.4.4/data/`), since `npx cabinetai import` resolves
+against the upstream `cabinetai/cabinets` registry and this template lives in a
+fork.
+
+## Quick start
+
+```bash
+git clone https://github.com/ysmish/cabinets.git
+cp -R cabinets/tiktok-ads <your-cabinet-data-dir>/
+cd <your-cabinet-data-dir>/tiktok-ads
+cp .env.example .env.local     # add your Gemini key
+npm test                       # 20 offline tests, no key needed
+```
+
+If this template is merged upstream, `npx cabinetai import tiktok-ads` becomes
+the install path.
 
 ## What it does
 
@@ -158,13 +165,27 @@ complementary; neither duplicates the other.
 
 ## Testing status
 
-The text pipeline is **verified live** against `gemini-3.5-flash-lite` — hooks
-generated from a real brand file, with constraint compliance checked and two
-prompt-level defects documented. The Veo path is implemented against the
-documented API and validated by 20 offline tests plus `--dry-run`, but has **not**
-been executed live: it is gated behind the $10 billing minimum above.
+**Text pipeline — verified live** against `gemini-3.5-flash-lite`. Hooks generated
+from a real brand file, constraint compliance checked, three prompt-level defects
+found and documented.
 
-Full record, including the raw responses and the defects found:
+**Video pipeline — called live twice, blocked on billing.**
+
+| Attempt | Response | Meaning |
+|---|---|---|
+| 1 | `400 — The value type for durationSeconds needs to be a number` | Request malformed. A real bug. |
+| 2, after fix | `429 — You exceeded your current quota` | Request valid. Rejected on entitlement alone. |
+
+The first attempt caught a defect the 19-test offline suite had missed: the test
+asserted the same incorrect type as the implementation, both from one misreading
+of the docs. Fixture-based tests validate internal consistency, not the external
+contract — only a live call could find it. Fixed in `lib/veo.mjs` with a
+regression test asserting numeric coercion from string config (now 20 tests).
+
+The second attempt proves everything upstream of billing works. Unblocking
+requires the $10 prepay top-up described above.
+
+Full record, including raw responses and the defects found:
 [`docs/testing-notes.md`](docs/testing-notes.md).
 
 ## Layout
@@ -176,6 +197,8 @@ Full record, including the raw responses and the defects found:
 .jobs/                      weekly-ad-prep · weekly-creative-review
 brand/ product/ audience/   your company context
 campaigns/                  one folder per campaign + clips + prompts
+campaigns/learnings/        weekly notes from the Growth Analyst
+docs/                       testing notes and captured test runs
 generators/                 the prompt for each pipeline stage
 scripts/                    generate-brief.mjs (free) · generate-clip.mjs (paid)
 scripts/lib/                env, gemini, veo — the testable core
