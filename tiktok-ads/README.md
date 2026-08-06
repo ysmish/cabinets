@@ -1,4 +1,10 @@
 # TikTok Ads
+```bash
+npx cabinetai import tiktok-ads
+cd tiktok-ads
+cp .env.example .env.local     # add your Gemini key
+npm test                       # 20 offline tests, no key needed
+```
 
 Test Videos:
 
@@ -14,12 +20,6 @@ TikTok ads — hooks, briefs, shot lists, generated 9:16 video, and a creative
 testing queue. Bring your own Google Gemini API key.
 
 
-```bash
-npx cabinetai import tiktok-ads
-cd tiktok-ads
-cp .env.example .env.local     # add your Gemini key
-npm test                       # 20 offline tests, no key needed
-```
 
 ## What it does
 
