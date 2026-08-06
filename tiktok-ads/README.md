@@ -8,7 +8,7 @@ testing queue. Bring your own Google Gemini API key.
 npx cabinetai import tiktok-ads
 cd tiktok-ads
 cp .env.example .env.local     # add your Gemini key
-npm test                       # 19 offline tests, no key needed
+npm test                       # 20 offline tests, no key needed
 ```
 
 ## What it does
@@ -151,7 +151,7 @@ complementary; neither duplicates the other.
 The text pipeline is **verified live** against `gemini-3.5-flash-lite` — hooks
 generated from a real brand file, with constraint compliance checked and two
 prompt-level defects documented. The Veo path is implemented against the
-documented API and validated by 19 offline tests plus `--dry-run`, but has **not**
+documented API and validated by 20 offline tests plus `--dry-run`, but has **not**
 been executed live: it is gated behind the $10 billing minimum above.
 
 Full record, including the raw responses and the defects found:
@@ -169,7 +169,7 @@ campaigns/                  one folder per campaign + clips + prompts
 generators/                 the prompt for each pipeline stage
 scripts/                    generate-brief.mjs (free) · generate-clip.mjs (paid)
 scripts/lib/                env, gemini, veo — the testable core
-scripts/test/               19 offline tests (response shapes inlined)
+scripts/test/               20 offline tests (response shapes inlined)
 video-studio/               embedded review gallery
 testing-queue.csv           the creative test queue
 ```
